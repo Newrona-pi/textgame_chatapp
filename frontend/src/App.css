@@ -1,0 +1,398 @@
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Hachi+Maru+Pop&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* 日付・時刻表示 */
+.datetime-display {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0);
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial', sans-serif;
+  backdrop-filter: blur(5px);
+}
+
+.datetime-display .date {
+  font-size: 24px;
+  font-weight: bold;
+  color: #eb7eef;
+  margin-bottom: 4px;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+  text-align: center; 
+}
+
+.datetime-display .time {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fafbfc;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+  text-align: center; 
+}
+
+/* 住所表示 */
+.datetime-display .address-display {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.datetime-display .address-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: #111111;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.datetime-display .loading-indicator {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 都道府県表示 */
+.location-display {
+  position: fixed;
+  top: 20px;
+  right: 160px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+  backdrop-filter: blur(5px);
+}
+
+.location-display .prefecture-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #4a90e2;
+  text-align: center;
+}
+
+.location-display .loading-indicator {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-top: 4px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 好感度表示 */
+.affection-display {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  min-width: 120px;
+  text-align: center;
+}
+
+.affection-label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 8px;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+}
+
+.affection-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.affection-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.affection-level {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+}
+
+.affection-message {
+  font-size: 12px;
+  color: #666;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+}
+
+/* カスタムスタイル */
+.game-container {
+  background: linear-gradient(to bottom, #f0f8ff, #e6f3ff);
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+.character-container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.character-image {
+  max-width: 600px;
+  max-height: 700px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.character-image:hover {
+  transform: scale(1.02);
+}
+
+.message-box {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1300px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 3px solid #fafafb;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 3;
+  backdrop-filter: blur(5px);
+}
+
+.character-name {
+  color: #c288fc;
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.character-name::before {
+  content: "♪";
+  margin-right: 8px;
+  color: #FF69B4;
+}
+
+.message-text {
+  color: #2c3e50;
+  font-size: 23px;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  font-family: 'Yusei Magic',       /* ← 追加部分 */
+               'M PLUS Rounded 1c', /* フォールバック */
+               sans-serif;
+}
+
+.loading-dots {
+  display: inline-block;
+}
+
+.loading-dots::after {
+  content: '';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}
+
+/* 4択選択肢のスタイル */
+.options-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.option-button {
+  padding: 12px 16px;
+  border: 2px solid #f7f2f5;
+  background: rgba(255, 255, 255, 0.9);
+  color: #FF69B4;
+  border-radius: 20px;
+  font-size: 18px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-align: center;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Yusei Magic',       /* ← 追加部分 */
+               'M PLUS Rounded 1c', /* フォールバック */
+               sans-serif;
+}
+
+.option-button:hover {
+  background: #FF69B4;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 105, 180, 0.3);
+}
+
+.option-button:active {
+  transform: translateY(0);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .datetime-display {
+    top: 10px;
+    left: 10px;
+    padding: 8px 12px;
+  }
+  
+  .datetime-display .date {
+    font-size: 12px;
+  }
+  
+  .datetime-display .time {
+    font-size: 16px;
+  }
+
+  .location-display {
+    top: 10px;
+    right: 120px; /* モバイルでは好感度表示の左側に配置 */
+    padding: 8px 12px;
+  }
+
+  .location-display .prefecture-name {
+    font-size: 14px;
+  }
+
+  .affection-display {
+    top: 10px;
+    right: 10px;
+    padding: 10px;
+    min-width: 100px;
+  }
+
+  .affection-label {
+    font-size: 12px;
+  }
+
+  .affection-level {
+    font-size: 16px;
+  }
+
+  .affection-message {
+    font-size: 10px;
+  }
+
+  .character-image {
+    max-width: 300px;
+    max-height: 400px;
+  }
+  
+  .message-box {
+    width: 95%;
+    padding: 15px;
+  }
+  
+  .message-text {
+    font-size: 16px;
+  }
+
+  .options-container {
+    grid-template-columns: 1fr;
+  }
+
+  .option-button {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}
+
+.effect-heart {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  animation: heartEffect 3s ease-out forwards;
+}
+
+.effect-icon {
+  width: 40px;
+  height: 40px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes heartEffect {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-20px);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1) translateY(-40px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8) translateY(-80px);
+  }
+}
+
