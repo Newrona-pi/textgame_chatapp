@@ -6,7 +6,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(),tailwindcss()],
-  base: '/character-chat-app/', // GitHub Pages用のベースパス
+  base: '/textgame_chatapp/', // GitHub Pages用のベースパス
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
