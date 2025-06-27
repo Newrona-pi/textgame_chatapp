@@ -179,8 +179,8 @@
 }
 
 .character-image {
-  max-width: 600px;
-  max-height: 700px;
+  max-width: 400px;
+  max-height: 500px;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
   transition: transform 0.3s ease;
@@ -369,6 +369,11 @@
     font-size: 14px;
     line-height: 1.4;
     margin-bottom: 20px;
+  }
+  .options-container {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
   }
   .option-button {
     font-size: 13px;
