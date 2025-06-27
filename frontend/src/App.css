@@ -369,15 +369,13 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.10);
     margin: 0 auto 8px auto;
+    overflow-y: auto;
   }
   
   .message-text {
     font-size: 14px;
     line-height: 1.4;
     margin-bottom: 8px;
-    max-height: 70px;
-    min-height: 24px;
-    overflow-y: auto;
   }
 
   .options-container {
