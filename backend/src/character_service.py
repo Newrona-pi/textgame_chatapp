@@ -117,13 +117,13 @@ class CharacterService:
             "pref": pref, 
         }
 
-    def generate_initial_dialogue(self, character_id, lat=None, lon=None):
+    def generate_initial_dialogue(self, character_id, lat=None, lon=None, affection_level=40):
         character_data = self.characters.get(character_id)
         if not character_data:
             return {"message": "キャラクターが見つかりません。", "options": []}
 
         context = self._get_current_context(lat, lon)
-        prompt = self._build_initial_prompt(character_data, context)
+        prompt = self._build_initial_prompt(character_data, context, affection_level)
         
         try:
             response_text = self._generate_with_openai(prompt)
@@ -133,13 +133,13 @@ class CharacterService:
         except Exception as e:
             return {"message": f"初期会話生成エラー: {str(e)}", "options": []}
 
-    def generate_next_dialogue(self, character_id, user_choice, conversation_history, lat=None, lon=None):
+    def generate_next_dialogue(self, character_id, user_choice, conversation_history, lat=None, lon=None, affection_level=None):
         character_data = self.characters.get(character_id)
         if not character_data:
             return {"message": "キャラクターが見つかりません。", "options": []}
 
         context = self._get_current_context(lat, lon)
-        prompt = self._build_next_prompt(character_data, user_choice, conversation_history, context)
+        prompt = self._build_next_prompt(character_data, user_choice, conversation_history, context, affection_level)
 
         try:
             response_text = self._generate_with_openai(prompt)
@@ -149,7 +149,7 @@ class CharacterService:
         except Exception as e:
             return {"message": f"次の会話生成エラー: {str(e)}", "options": []}
 
-    def _build_initial_prompt(self, character_data, context):
+    def _build_initial_prompt(self, character_data, context, affection_level):
         name        = character_data['name']
         age         = character_data['age']
         personality = character_data['personality']
@@ -163,15 +163,24 @@ class CharacterService:
 {tone}で話し、{setting}という設定です。
 {background}
 
+【重要】好感度パラメーター: {affection_level}（0〜100）
+以下の好感度対応表に従って、必ず言葉遣いと表現を調整してください：
+
+▼好感度対応表（絶対厳守）
+- 0~20: 怒った冷たい言葉遣い（「はぁ？」「うざい」「知らないよ」など）
+- 21~40: そっけない素っ気ない表現（「そうですか」「別に」「まぁ」など）
+- 41~60: 普通の丁寧で標準的な表現（「そうですね」「はい」「いいと思います」など）
+- 61~80: 友達のようなフランクで親しみやすい表現（「そうだね！」「いいじゃん」「楽しそう」など）
+- 81~100: 好意的で甘い表現（「素敵ですね♪」「大好き」「一緒にいると楽しい」など）
+
 現在の状況:
 - 日付: {context['date']} ({context['weekday']})
 - 季節: {context['season']} ({context['season_detail']})
 - 時間帯: {context['time_period']} ({context['time_detail']})
 - 現在地: {context['pref']}
 
-その返答では必ず、
-「{context['pref']}」らしさ（位置情報から取得した場所の名物・今日開催している地元行事・天気・おすすめのお店の具体名など）を多く盛り込み、
-続けて新しい 4 択を提示してください。
+好感度{affection_level}に適した言葉遣いで、「{context['pref']}」らしさ（位置情報から取得した場所の名物・今日開催している地元行事・天気・おすすめのお店の具体名など）を盛り込んだメッセージを返し、続けて新しい 4 択を提示してください。
+
 ▼フォーマット（厳守）
 メッセージ: ～
 1. 「～」 #v-good
@@ -183,11 +192,12 @@ class CharacterService:
 - #v-good が 1 行、#good が 1 行、#bad が 1 行、#v-bad が 1 行 **ちょうど**。
 - 行頭の番号と「.」は半角固定。
 - 各行は主人公の台詞／行動を 1 文で。
+- 好感度{affection_level}の言葉遣いを必ず適用する。
 - 余計な説明や注釈は書かない。
 """
 
 
-    def _build_next_prompt(self, character_data, user_choice, conversation_history, context):
+    def _build_next_prompt(self, character_data, user_choice, conversation_history, context, affection_level=None):
         name        = character_data['name']
         age         = character_data['age']
         personality = character_data['personality']
@@ -204,17 +214,28 @@ class CharacterService:
 {tone}で話し、{setting}という設定です。
 {background}
 
+【重要】好感度パラメーター: {affection_level}（0〜100）
+以下の好感度対応表に従って、必ず言葉遣いと表現を調整してください：
+
+▼好感度対応表（絶対厳守）
+- 0~20: 怒った冷たい言葉遣い（「はぁ？」「うざい」「知らないよ」「ムカつく」など）
+- 21~40: そっけない素っ気ない表現（「そうですか」「別に」「まぁ」「どうでもいい」など）
+- 41~60: 普通の丁寧で標準的な表現（「そうですね」「はい」「いいと思います」など）
+- 61~80: 友達のようなフランクで親しみやすい表現（「そうだね！」「いいじゃん」「楽しそう」など）
+- 81~100: 好意的で甘い表現（「素敵ですね♪」「大好き」「一緒にいると楽しい」「嬉しい♪」など）
+
 現在の状況:
 - 日付: {context['date']} ({context['weekday']})
 - 季節: {context['season']} ({context['season_detail']})
 - 時間帯: {context['time_period']} ({context['time_detail']})
 - 現在地: {context['pref']}
+- 好感度パラメーター: {affection_level}
 
 これまでの会話履歴:
 {history_str}
 
 ユーザーは「{user_choice}」を選びました。
-その反応として「{context['pref']}」らしさ（位置情報から取得した場所の名物・今日開催している地元行事・天気・おすすめのお店の具体名など）を盛り込んだ 1 つのメッセージを返し、続けて新しい 4 択を提示してください。
+好感度{affection_level}に適した言葉遣いで、ユーザーの選択に対して反応し、たまに「{context['pref']}」らしさ（位置情報から取得した場所の名物・今日開催している地元行事・おすすめのお店の具体名など）を盛り込んだメッセージを返し、続けて新しい 4 択を提示してください。
 
 ▼フォーマット（厳守）
 メッセージ: ～
@@ -222,6 +243,13 @@ class CharacterService:
 2. 「～」 #good
 3. 「～」 #bad
 4. 「～」 #v-bad
+
+▼ルール
+- #v-good が 1 行、#good が 1 行、#bad が 1 行、#v-bad が 1 行 **ちょうど**。
+- 行頭の番号と「.」は半角固定。
+- 各行は主人公の台詞／行動を 1 文で。
+- 好感度{affection_level}の言葉遣いを絶対に適用する。
+- 余計な説明や注釈は書かない。
 """
 
 
@@ -229,10 +257,10 @@ class CharacterService:
         response = self.openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "あなたは指定されたキャラクターになりきって、自然で親しみやすいメッセージと、それに対する4つの選択肢を生成するアシスタントです。"},
+                {"role": "system", "content": "あなたは指定されたキャラクターになりきって、自然なメッセージと、それに対する4つの選択肢を生成するアシスタントです。"},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300, # メッセージと選択肢の両方を生成するため、max_tokensを増やす
+            max_tokens=250, # メッセージと選択肢の両方を生成するため、max_tokensを増やす
             temperature=0.8
         )
         return response.choices[0].message.content.strip()
