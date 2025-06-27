@@ -22,7 +22,7 @@ function App() {
   const [currentBackground, setCurrentBackground] = useState(backgroundImage);
   const [currentPrefecture, setCurrentPrefecture] = useState(null);
   const [isLoadingBackground, setIsLoadingBackground] = useState(false);
-  const [affectionLevel, setAffectionLevel] = useState(30); // 好感度パラメーター（初期値30）
+  const [affectionLevel, setAffectionLevel] = useState(40); // 好感度パラメーター（初期値40）
   const [detailedAddress, setDetailedAddress] = useState(null);
 
   // 日付・時刻を1秒ごとに更新
@@ -134,7 +134,8 @@ function App() {
         body: JSON.stringify({
           character_id: 'mano',
           lat: location.lat,
-          lon: location.lon
+          lon: location.lon,
+          affection_level: affectionLevel // 好感度パラメーターを追加
         }),
       })
       
@@ -210,8 +211,27 @@ function App() {
     // エフェクトを表示
     showEffect(option.type) // option.typeを渡す
 
-    // 好感度を更新
-    updateAffectionLevel(option.type)
+    // 好感度を更新（新しい値を計算）
+    let newAffectionLevel = affectionLevel;
+    switch (option.type) {
+      case 'v-good':
+        newAffectionLevel = Math.min(100, affectionLevel + 10);
+        break;
+      case 'good':
+        newAffectionLevel = Math.min(100, affectionLevel + 5);
+        break;
+      case 'bad':
+        newAffectionLevel = Math.max(0, affectionLevel - 5);
+        break;
+      case 'v-bad':
+        newAffectionLevel = Math.max(0, affectionLevel - 10);
+        break;
+      default:
+        break;
+    }
+    
+    // 好感度を即座に更新
+    setAffectionLevel(newAffectionLevel);
 
     // 会話履歴に追加
     const newHistory = [...conversationHistory, {
@@ -231,7 +251,8 @@ function App() {
           user_choice: option.text, // option.textを送信
           conversation_history: newHistory,
           lat: location.lat,
-          lon: location.lon
+          lon: location.lon,
+          affection_level: newAffectionLevel // 計算した新しい好感度を送信
         }),
       })
       
@@ -257,7 +278,7 @@ function App() {
     setConversationHistory([])
     setOptions([])
     setMessage('やっほー！今日もお疲れ！')
-    setAffectionLevel(30) // 好感度を初期値にリセット
+    setAffectionLevel(40) // 好感度を初期値にリセット
   }
 
   useEffect(() => {
@@ -269,32 +290,6 @@ function App() {
     ]
     setMessage(initialMessages[Math.floor(Math.random() * initialMessages.length)])
   }, [])
-
-  // 好感度を更新する関数
-  const updateAffectionLevel = (optionType) => {
-    setAffectionLevel(prevLevel => {
-      let newLevel = prevLevel;
-      
-      switch (optionType) {
-        case 'v-good':
-          newLevel = Math.min(100, prevLevel + 10);
-          break;
-        case 'good':
-          newLevel = Math.min(100, prevLevel + 5);
-          break;
-        case 'bad':
-          newLevel = Math.max(0, prevLevel - 5);
-          break;
-        case 'v-bad':
-          newLevel = Math.max(0, prevLevel - 10);
-          break;
-        default:
-          break;
-      }
-      
-      return newLevel;
-    });
-  };
 
   // 好感度レベルに応じた色を取得する関数
   const getAffectionColor = (level) => {
