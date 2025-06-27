@@ -345,18 +345,11 @@
   }
 
   .character-container {
-    padding: 10px;
-    min-height: 100vh;
-    justify-content: flex-start;
-    padding-top: 80px; /* 上部の情報表示分のスペース */
+    padding-top: 60px;
   }
-
   .character-image {
-    max-width: 250px;
-    max-height: 300px;
-    margin-bottom: 20px;
+    margin-top: 16px;
   }
-  
   .message-box {
     width: 95%;
     padding: 8px;
@@ -371,20 +364,11 @@
     margin: 0 auto 8px auto;
     overflow-y: auto;
   }
-  
   .message-text {
     font-size: 14px;
     line-height: 1.4;
     margin-bottom: 20px;
   }
-
-  .options-container {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-bottom: 10px;
-    flex-shrink: 0;
-  }
-
   .option-button {
     font-size: 13px;
     padding: 8px 10px;
