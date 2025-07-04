@@ -142,9 +142,43 @@
 }
 
 .affection-message {
-  font-size: 12px;
+  font-size: 10px;
   color: #666;
   font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif;
+}
+
+/* スクリーンショット用ボタン */
+.screenshot-controls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.screenshot-button {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 2px solid #4a90e2 !important;
+  color: #4a90e2 !important;
+  padding: 6px 12px !important;
+  border-radius: 20px !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  font-family: 'Hachi Maru Pop', 'M PLUS Rounded 1c', sans-serif !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+}
+
+.screenshot-button:hover {
+  background: rgba(74, 144, 226, 0.1) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.screenshot-button:active {
+  transform: translateY(0) !important;
 }
 
 /* カスタムスタイル */
@@ -176,6 +210,7 @@
   min-height: 100vh;
   padding: 20px;
   box-sizing: border-box;
+  padding-top: 60px;
 }
 
 .character-image {
@@ -207,6 +242,14 @@
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* メッセージボックス非表示時のスタイル */
+.message-box.hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(100%);
+  pointer-events: none;
 }
 
 .character-name {
@@ -344,6 +387,16 @@
     font-size: 10px;
   }
 
+  /* モバイル用スクリーンショットボタン */
+  .screenshot-controls {
+    top: 10px;
+  }
+
+  .screenshot-button {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
   .character-container {
     padding-top: 60px;
   }
@@ -452,6 +505,12 @@
 
   .affection-message {
     font-size: 9px;
+  }
+
+  /* 小さい画面用スクリーンショットボタン */
+  .screenshot-button {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
   }
 }
 

@@ -40,11 +40,12 @@ def next_dialogue():
         conversation_history = data.get("conversation_history", []) # 会話履歴を受け取る
         lat = data.get("lat")
         lon = data.get("lon")
+        affection_level = data.get("affection_level")
 
         if user_choice is None:
             return jsonify({"success": False, "error": "user_choice is required"}), 400
         
-        response = character_service.generate_next_dialogue(character_id, user_choice, conversation_history, lat, lon)
+        response = character_service.generate_next_dialogue(character_id, user_choice, conversation_history, lat, lon, affection_level)
         
         return jsonify({
             "success": True,
@@ -69,12 +70,50 @@ def get_characters():
                 "id": char_id,
                 "name": char_data["name"],
                 "age": char_data["age"],
-                "personality": char_data["personality"]
+                "personality": char_data["personality"],
+                "tone": char_data["tone"],
+                "setting": char_data["setting"],
+                "background": char_data["background"],
+                "character_image_url": char_data.get("character_image_url", ""),
+                "background_image_url": char_data.get("background_image_url", "")
             })
         
         return jsonify({
             "success": True,
             "characters": characters
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@character_bp.route("/characters/<character_id>", methods=["GET"])
+@cross_origin()
+def get_character(character_id):
+    """特定のキャラクター情報を取得"""
+    try:
+        character_data = character_service.characters.get(character_id)
+        if not character_data:
+            return jsonify({
+                "success": False,
+                "error": "Character not found"
+            }), 404
+        
+        return jsonify({
+            "success": True,
+            "character": {
+                "id": character_id,
+                "name": character_data["name"],
+                "age": character_data["age"],
+                "personality": character_data["personality"],
+                "tone": character_data["tone"],
+                "setting": character_data["setting"],
+                "background": character_data["background"],
+                "character_image_url": character_data.get("character_image_url", ""),
+                "background_image_url": character_data.get("background_image_url", "")
+            }
         })
     
     except Exception as e:

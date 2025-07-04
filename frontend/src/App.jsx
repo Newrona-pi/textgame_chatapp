@@ -8,38 +8,105 @@ import { getPrefectureFromLocation, getPrefectureImage, getDetailedAddress, form
 import { getBestStreetViewImage, getPrefectureLandmark } from './utils/streetViewUtils.js'
 import { API_ENDPOINTS } from './config/api.js'
 import './App.css'
+import { Routes, Route, useParams, useNavigate } from 'react-router-dom'
 
-function App() {
+function CharacterChat() {
+  const { characterId } = useParams();
+  const navigate = useNavigate();
+
   const [message, setMessage] = useState('こんにちは！今日もお疲れさまです。')
   const [options, setOptions] = useState([])
   const [isLoading, setIsLoading] = useState(false)
-  const [characterName] = useState('真乃')
+  const [characterName, setCharacterName] = useState('')
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
   const [conversationHistory, setConversationHistory] = useState([])
   const [isDialogueMode, setIsDialogueMode] = useState(false)
-  const [effects, setEffects] = useState([]) // 追加
+  const [effects, setEffects] = useState([])
   const [location, setLocation] = useState({ lat: null, lon: null });
   const [currentBackground, setCurrentBackground] = useState(backgroundImage);
   const [currentPrefecture, setCurrentPrefecture] = useState(null);
   const [isLoadingBackground, setIsLoadingBackground] = useState(false);
-  const [affectionLevel, setAffectionLevel] = useState(40); // 好感度パラメーター（初期値40）
+  const [affectionLevel, setAffectionLevel] = useState(40);
   const [detailedAddress, setDetailedAddress] = useState(null);
+  const [isMessageBoxVisible, setIsMessageBoxVisible] = useState(true);
+  const [characters, setCharacters] = useState([]);
+  const [currentCharacter, setCurrentCharacter] = useState(null);
+  const [currentCharacterImage, setCurrentCharacterImage] = useState(characterImage);
+  const [isLoadingCharacters, setIsLoadingCharacters] = useState(false);
 
   // 日付・時刻を1秒ごとに更新
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentDateTime(new Date())
     }, 1000)
-
-    return () => clearInterval(timer) // クリーンアップ
+    return () => clearInterval(timer)
   }, [])
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       pos  => setLocation({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
-      ()   => setLocation({ lat: null, lon: null })   // 拒否 or 失敗
+      ()   => setLocation({ lat: null, lon: null })
     );
   }, []);
+
+  // キャラクター情報を読み込む
+  useEffect(() => {
+    loadCharacters();
+  }, []);
+
+  // キャラクター一覧を読み込む
+  const loadCharacters = async () => {
+    setIsLoadingCharacters(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.CHARACTERS);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCharacters(data.characters);
+          // URLのcharacterIdに一致するキャラを選択
+          if (data.characters.length > 0) {
+            const found = data.characters.find(c => c.id === characterId);
+            if (found) {
+              selectCharacter(found);
+            } else {
+              // 存在しないキャラIDならトップにリダイレクト
+              navigate('/character/' + data.characters[0].id, { replace: true });
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading characters:', error);
+    }
+    setIsLoadingCharacters(false);
+  };
+
+  // キャラクターを選択する
+  const selectCharacter = async (character) => {
+    setCurrentCharacter(character);
+    setCharacterName(character.name);
+    if (character.character_image_url) {
+      setCurrentCharacterImage(character.character_image_url);
+    } else {
+      setCurrentCharacterImage(characterImage);
+    }
+    if (character.background_image_url) {
+      setCurrentBackground(character.background_image_url);
+    } else {
+      if (location.lat && location.lon) {
+        const prefecture = getPrefectureFromLocation(location.lat, location.lon);
+        if (prefecture) {
+          const backgroundPath = getPrefectureImage(prefecture);
+          setCurrentBackground(backgroundPath);
+        } else {
+          setCurrentBackground(backgroundImage);
+        }
+      } else {
+        setCurrentBackground(backgroundImage);
+      }
+    }
+    resetDialogue();
+  };
 
   // 位置情報が変更されたときに背景画像を更新
   useEffect(() => {
@@ -121,6 +188,11 @@ function App() {
 
   // 会話を開始する
   const startDialogue = async () => {
+    if (!currentCharacter) {
+      setMessage('キャラクターが選択されていません。');
+      return;
+    }
+    
     setIsLoading(true)
     setIsDialogueMode(true)
     setConversationHistory([])
@@ -132,7 +204,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          character_id: 'mano',
+          character_id: currentCharacter.id,
           lat: location.lat,
           lon: location.lon,
           affection_level: affectionLevel // 好感度パラメーターを追加
@@ -206,34 +278,35 @@ function App() {
 
   // ユーザーの選択を処理する
   const handleOptionSelect = async (option) => { // optionオブジェクトを受け取るように変更
-    setIsLoading(true)
-    
-    // エフェクトを表示
-    showEffect(option.type) // option.typeを渡す
-
-    // 好感度を更新（新しい値を計算）
-    let newAffectionLevel = affectionLevel;
-    switch (option.type) {
-      case 'v-good':
-        newAffectionLevel = Math.min(100, affectionLevel + 10);
-        break;
-      case 'good':
-        newAffectionLevel = Math.min(100, affectionLevel + 5);
-        break;
-      case 'bad':
-        newAffectionLevel = Math.max(0, affectionLevel - 5);
-        break;
-      case 'v-bad':
-        newAffectionLevel = Math.max(0, affectionLevel - 10);
-        break;
-      default:
-        break;
+    if (!currentCharacter) {
+      setMessage('キャラクターが選択されていません。');
+      return;
     }
     
-    // 好感度を即座に更新
-    setAffectionLevel(newAffectionLevel);
-
-    // 会話履歴に追加
+    setIsLoading(true)
+    
+    // 好感度を更新
+    let newAffectionLevel = affectionLevel
+    switch (option.type) {
+      case 'v-good':
+        newAffectionLevel = Math.min(100, affectionLevel + 10)
+        break
+      case 'good':
+        newAffectionLevel = Math.min(100, affectionLevel + 5)
+        break
+      case 'bad':
+        newAffectionLevel = Math.max(0, affectionLevel - 5)
+        break
+      case 'v-bad':
+        newAffectionLevel = Math.max(0, affectionLevel - 10)
+        break
+    }
+    setAffectionLevel(newAffectionLevel)
+    
+    // エフェクトを表示
+    showEffect(option.type)
+    
+    // 会話履歴を更新
     const newHistory = [...conversationHistory, {
       user: option.text, // option.textを履歴に追加
       character: message
@@ -247,7 +320,7 @@ function App() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          character_id: 'mano',
+          character_id: currentCharacter.id,
           user_choice: option.text, // option.textを送信
           conversation_history: newHistory,
           lat: location.lat,
@@ -295,8 +368,8 @@ function App() {
   const getAffectionColor = (level) => {
     if (level >= 80) return '#ff6b9d'; // ピンク（最高）
     if (level >= 60) return '#ff8c42'; // オレンジ（高）
-    if (level >= 40) return '#ffd93d'; // 黄色（中）
-    if (level >= 20) return '#6bcf7f'; // 緑（低）
+    if (level >= 40) return '#6bcf7f'; // 緑（中）
+    if (level >= 20) return '#ffd93d'; // 黄色（低）
     return '#ff6b6b'; // 赤（最低）
   };
 
@@ -307,6 +380,11 @@ function App() {
     if (level >= 40) return '普通';
     if (level >= 20) return '苦手';
     return '大嫌い';
+  };
+
+  // メッセージボックスの表示/非表示を切り替える
+  const toggleMessageBox = () => {
+    setIsMessageBoxVisible(!isMessageBoxVisible);
   };
 
   return (
@@ -347,6 +425,18 @@ function App() {
         </div>
       </div>
 
+      {/* スクリーンショット用ボタン */}
+      <div className="screenshot-controls">
+        <Button 
+          onClick={toggleMessageBox}
+          variant="outline"
+          className="screenshot-button"
+          title="メッセージボックスを表示/非表示にしてスクリーンショットを撮りやすくします"
+        >
+          {isMessageBoxVisible ? '📷 メッセージ非表示' : '📷 メッセージ表示'}
+        </Button>
+      </div>
+
       <img 
         src={currentBackground} 
         alt="背景画像" 
@@ -356,7 +446,7 @@ function App() {
       
       <div className="character-container">
         <img 
-          src={characterImage} 
+          src={currentCharacterImage} 
           alt="真乃ちゃん" 
           className="character-image"
         />
@@ -376,7 +466,7 @@ function App() {
         ))}
       </div>
 
-      <div className="message-box">
+      <div className={`message-box ${!isMessageBoxVisible ? 'hidden' : ''}`}>
         <div className="character-name">
           {characterName}
         </div>
@@ -430,6 +520,13 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/character/:characterId" element={<CharacterChat />} />
+      {/* 必要ならトップページや404ページも追加可能 */}
+    </Routes>
+  );
+}
 
 
