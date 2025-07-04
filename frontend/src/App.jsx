@@ -425,8 +425,8 @@ function CharacterChat() {
         </div>
       </div>
 
-      {/* スクリーンショット用ボタン */}
-      <div className="screenshot-controls">
+      {/* スクリーンショット用ボタン（削除） */}
+      {/* <div className="screenshot-controls">
         <Button 
           onClick={toggleMessageBox}
           variant="outline"
@@ -435,7 +435,7 @@ function CharacterChat() {
         >
           {isMessageBoxVisible ? '📷 メッセージ非表示' : '📷 メッセージ表示'}
         </Button>
-      </div>
+      </div> */}
 
       <img 
         src={currentBackground} 
@@ -467,6 +467,15 @@ function CharacterChat() {
       </div>
 
       <div className={`message-box ${!isMessageBoxVisible ? 'hidden' : ''}`}>
+        {/* ▼ボタンを右上に配置 */}
+        <button 
+          onClick={toggleMessageBox}
+          className="hide-message-btn"
+          title="メッセージボックスを非表示にする"
+          style={{position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', zIndex: 2}}
+        >
+          ▼
+        </button>
         <div className="character-name">
           {characterName}
         </div>
@@ -516,6 +525,16 @@ function CharacterChat() {
           )}
         </div>
       </div>
+      {/* メッセージボックスが非表示のときだけ再表示ボタンを右下に表示 */}
+      {!isMessageBoxVisible && (
+        <button
+          onClick={toggleMessageBox}
+          className="show-message-btn"
+          title="メッセージボックスを表示する"
+        >
+          ▼
+        </button>
+      )}
     </div>
   )
 }
