@@ -524,7 +524,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/character/:characterId" element={<CharacterChat />} />
-      {/* 必要ならトップページや404ページも追加可能 */}
+      <Route path="*" element={<div style={{textAlign: 'center', marginTop: '3em', fontSize: '1.5em'}}>ページが見つかりません（Not Found）</div>} />
     </Routes>
   );
 }
