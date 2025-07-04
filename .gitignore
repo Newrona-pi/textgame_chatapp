@@ -34,10 +34,8 @@ frontend/.env
 backend/.env
 
 # Build outputs
-dist/
 build/
 *.egg-info/
-frontend/dist/
 frontend/build/
 
 # IDE
