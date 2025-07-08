@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import characterImage from './assets/character.png'
 import backgroundImage from './assets/background.png'
-import heartIcon from './assets/heart.png' // 追加
-import brokenHeartIcon from './assets/broken-heart.png' // 追加
+import heartIcon from './assets/heart.png' 
+import brokenHeartIcon from './assets/broken-heart.png' 
 import { getPrefectureFromLocation, getPrefectureImage, getDetailedAddress, formatAddress } from './utils/locationUtils.js'
 import { getBestStreetViewImage, getPrefectureLandmark } from './utils/streetViewUtils.js'
 import { API_ENDPOINTS } from './config/api.js'
@@ -192,36 +192,45 @@ function CharacterChat() {
       setMessage('キャラクターが選択されていません。');
       return;
     }
-    
     setIsLoading(true)
     setIsDialogueMode(true)
     setConversationHistory([])
-    
     try {
-      const response = await fetch(API_ENDPOINTS.DIALOGUE_START, {
+      // 1. キャラクター発言のみ取得
+      const charRes = await fetch(API_ENDPOINTS.DIALOGUE_CHARACTER, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           character_id: currentCharacter.id,
+          user_choice: '',
+          conversation_history: [],
           lat: location.lat,
           lon: location.lon,
-          affection_level: affectionLevel // 好感度パラメーターを追加
-        }),
+          affection_level: affectionLevel
+        })
       })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setMessage(data.message)
-        setOptions(data.options)
-      } else {
-        setMessage('会話の開始に失敗しました。')
-        setOptions([])
-      }
+      if (!charRes.ok) throw new Error('キャラクター発言取得失敗')
+      const charData = await charRes.json()
+      setMessage(charData.message)
+      // 2. 4択選択肢のみ取得
+      const optRes = await fetch(API_ENDPOINTS.DIALOGUE_OPTIONS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          character_id: currentCharacter.id,
+          character_message: charData.message,
+          user_choice: '',
+          conversation_history: [],
+          lat: location.lat,
+          lon: location.lon,
+          affection_level: affectionLevel
+        })
+      })
+      if (!optRes.ok) throw new Error('選択肢取得失敗')
+      const optData = await optRes.json()
+      setOptions(optData.options)
     } catch (error) {
-      console.error('Error starting dialogue:', error)
-      setMessage('エラーが発生しました。')
+      setMessage('会話の開始に失敗しました。')
       setOptions([])
     }
     setIsLoading(false)
@@ -277,69 +286,60 @@ function CharacterChat() {
   }
 
   // ユーザーの選択を処理する
-  const handleOptionSelect = async (option) => { // optionオブジェクトを受け取るように変更
+  const handleOptionSelect = async (option) => {
     if (!currentCharacter) {
       setMessage('キャラクターが選択されていません。');
       return;
     }
-    
     setIsLoading(true)
-    
     // 好感度を更新
     let newAffectionLevel = affectionLevel
     switch (option.type) {
-      case 'v-good':
-        newAffectionLevel = Math.min(100, affectionLevel + 10)
-        break
-      case 'good':
-        newAffectionLevel = Math.min(100, affectionLevel + 5)
-        break
-      case 'bad':
-        newAffectionLevel = Math.max(0, affectionLevel - 5)
-        break
-      case 'v-bad':
-        newAffectionLevel = Math.max(0, affectionLevel - 10)
-        break
+      case 'v-good': newAffectionLevel = Math.min(100, affectionLevel + 10); break
+      case 'good': newAffectionLevel = Math.min(100, affectionLevel + 5); break
+      case 'bad': newAffectionLevel = Math.max(0, affectionLevel - 5); break
+      case 'v-bad': newAffectionLevel = Math.max(0, affectionLevel - 10); break
     }
     setAffectionLevel(newAffectionLevel)
-    
-    // エフェクトを表示
     showEffect(option.type)
-    
-    // 会話履歴を更新
-    const newHistory = [...conversationHistory, {
-      user: option.text, // option.textを履歴に追加
-      character: message
-    }]
+    const newHistory = [...conversationHistory, { user: option.text, character: message }]
     setConversationHistory(newHistory)
-    
     try {
-      const response = await fetch(API_ENDPOINTS.DIALOGUE_NEXT, {
+      // 1. キャラクター発言のみ取得
+      const charRes = await fetch(API_ENDPOINTS.DIALOGUE_CHARACTER, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           character_id: currentCharacter.id,
-          user_choice: option.text, // option.textを送信
+          user_choice: option.text,
           conversation_history: newHistory,
           lat: location.lat,
           lon: location.lon,
-          affection_level: newAffectionLevel // 計算した新しい好感度を送信
-        }),
+          affection_level: newAffectionLevel
+        })
       })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setMessage(data.message)
-        setOptions(data.options)
-      } else {
-        setMessage('次の会話の取得に失敗しました。')
-        setOptions([])
-      }
+      if (!charRes.ok) throw new Error('キャラクター発言取得失敗')
+      const charData = await charRes.json()
+      setMessage(charData.message)
+      // 2. 4択選択肢のみ取得
+      const optRes = await fetch(API_ENDPOINTS.DIALOGUE_OPTIONS, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          character_id: currentCharacter.id,
+          character_message: charData.message,
+          user_choice: option.text,
+          conversation_history: newHistory,
+          lat: location.lat,
+          lon: location.lon,
+          affection_level: newAffectionLevel
+        })
+      })
+      if (!optRes.ok) throw new Error('選択肢取得失敗')
+      const optData = await optRes.json()
+      setOptions(optData.options)
     } catch (error) {
-      console.error('Error getting next dialogue:', error)
-      setMessage('エラーが発生しました。')
+      setMessage('次の会話の取得に失敗しました。')
       setOptions([])
     }
     setIsLoading(false)
@@ -508,7 +508,7 @@ function CharacterChat() {
           {!isDialogueMode ? (
             <Button 
               onClick={startDialogue} 
-              ddisabled={isLoading || location.lat === null}
+              disabled={isLoading || location.lat === null}
               className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-2 rounded-full transition-colors duration-200"
             >
               会話を始める

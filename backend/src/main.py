@@ -1,3 +1,4 @@
+print(__file__)
 import os
 import sys
 # DON\'T CHANGE THIS !!!

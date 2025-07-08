@@ -59,6 +59,51 @@ def next_dialogue():
             "error": str(e)
         }), 500
 
+@character_bp.route("/dialogue/character", methods=["POST"])
+@cross_origin()
+def character_dialogue():
+    """キャラクター発言のみを生成"""
+    try:
+        data = request.get_json()
+        character_id = data.get("character_id", "mano")
+        user_choice = data.get("user_choice")
+        conversation_history = data.get("conversation_history", [])
+        lat = data.get("lat")
+        lon = data.get("lon")
+        affection_level = data.get("affection_level")
+
+        # キャラクター発言のみ生成
+        response = character_service.generate_character_message(character_id, user_choice, conversation_history, lat, lon, affection_level)
+        return jsonify({
+            "success": True,
+            "message": response["message"]
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@character_bp.route("/dialogue/options", methods=["POST"])
+@cross_origin()
+def options_dialogue():
+    """4択選択肢のみを生成"""
+    try:
+        data = request.get_json()
+        character_id = data.get("character_id", "mano")
+        character_message = data.get("character_message")
+        user_choice = data.get("user_choice")
+        conversation_history = data.get("conversation_history", [])
+        lat = data.get("lat")
+        lon = data.get("lon")
+        affection_level = data.get("affection_level")
+
+        # 4択選択肢のみ生成
+        response = character_service.generate_options(character_id, character_message, user_choice, conversation_history, lat, lon, affection_level)
+        return jsonify({
+            "success": True,
+            "options": response["options"]
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 @character_bp.route("/characters", methods=["GET"])
 @cross_origin()
 def get_characters():
@@ -68,14 +113,15 @@ def get_characters():
         for char_id, char_data in character_service.characters.items():
             characters.append({
                 "id": char_id,
-                "name": char_data["name"],
-                "age": char_data["age"],
-                "personality": char_data["personality"],
-                "tone": char_data["tone"],
-                "setting": char_data["setting"],
-                "background": char_data["background"],
-                "character_image_url": char_data.get("character_image_url", ""),
-                "background_image_url": char_data.get("background_image_url", "")
+                "name": char_data["名前"],
+                "gender": char_data["性別"],
+                "personality": char_data["性格"],
+                "first_person": char_data["一人称"],
+                "fan_name": char_data["ファンの名称"],
+                "tone": char_data["口調"],
+                "setting": char_data["背景・設定"],
+                "character_image_url": char_data.get("キャラクター画像URL", ""),
+                "background_image_url": char_data.get("背景画像URL", "")
             })
         
         return jsonify({
@@ -105,14 +151,15 @@ def get_character(character_id):
             "success": True,
             "character": {
                 "id": character_id,
-                "name": character_data["name"],
-                "age": character_data["age"],
-                "personality": character_data["personality"],
-                "tone": character_data["tone"],
-                "setting": character_data["setting"],
-                "background": character_data["background"],
-                "character_image_url": character_data.get("character_image_url", ""),
-                "background_image_url": character_data.get("background_image_url", "")
+                "name": character_data["名前"],
+                "gender": character_data["性別"],
+                "personality": character_data["性格"],
+                "first_person": character_data["一人称"],
+                "fan_name": character_data["ファンの名称"],
+                "tone": character_data["口調"],
+                "setting": character_data["背景・設定"],
+                "character_image_url": character_data.get("キャラクター画像URL", ""),
+                "background_image_url": character_data.get("背景画像URL", "")
             }
         })
     
