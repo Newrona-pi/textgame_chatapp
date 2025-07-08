@@ -7,14 +7,23 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from src.routes.character import character_bp
+from src.models.user import db
+from src.models import user, nfc  # モデルをimportしてテーブル作成対象に含める
 
 app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
 app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# CORS設定を追加
+# DB初期化
 CORS(app)
+db.init_app(app)
 
 app.register_blueprint(character_bp, url_prefix='/api')
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

@@ -1,6 +1,9 @@
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
 from src.character_service import CharacterService
+from src.models.nfc import NfcRecord, NfcConversation
+from src.models.user import db
+from datetime import datetime
 
 character_bp = Blueprint("character", __name__)
 character_service = CharacterService()
@@ -168,5 +171,67 @@ def get_character(character_id):
             "success": False,
             "error": str(e)
         }), 500
+
+@character_bp.route('/nfc/<character_id>/<nfc_uid>/log', methods=['POST'])
+@cross_origin()
+def log_nfc_data(character_id, nfc_uid):
+    """NFCタグごとに位置情報・会話・好感度を保存"""
+    data = request.get_json()
+    lat = data.get('lat')
+    lon = data.get('lon')
+    affection_level = data.get('affection_level')
+    message = data.get('message')
+    sender = data.get('sender')  # 'user' or 'character'
+    now = datetime.utcnow()
+
+    # nfc_uid + character_idでレコードを検索
+    nfc_record = NfcRecord.query.filter_by(character_id=character_id, nfc_uid=nfc_uid).first()
+    if not nfc_record:
+        nfc_record = NfcRecord(character_id=character_id, nfc_uid=nfc_uid)
+        db.session.add(nfc_record)
+
+    # 位置情報・好感度を更新
+    if lat is not None:
+        nfc_record.last_location_lat = lat
+    if lon is not None:
+        nfc_record.last_location_lon = lon
+    nfc_record.last_location_time = now
+    if affection_level is not None:
+        nfc_record.affection_level = affection_level
+    nfc_record.updated_at = now
+
+    # 会話内容があれば履歴に追加
+    if message:
+        conv = NfcConversation(nfc_record=nfc_record, message=message, sender=sender, timestamp=now)
+        db.session.add(conv)
+
+    db.session.commit()
+    return jsonify({'success': True})
+
+@character_bp.route('/nfc/<character_id>/<nfc_uid>/history', methods=['GET'])
+@cross_origin()
+def get_nfc_history(character_id, nfc_uid):
+    """NFCタグごとの履歴取得"""
+    nfc_record = NfcRecord.query.filter_by(character_id=character_id, nfc_uid=nfc_uid).first()
+    if not nfc_record:
+        return jsonify({'success': False, 'error': 'NFC record not found'}), 404
+    conversations = [
+        {
+            'message': conv.message,
+            'sender': conv.sender,
+            'timestamp': conv.timestamp.isoformat()
+        }
+        for conv in nfc_record.conversations
+    ]
+    return jsonify({
+        'success': True,
+        'character_id': nfc_record.character_id,
+        'nfc_uid': nfc_record.nfc_uid,
+        'last_location_lat': nfc_record.last_location_lat,
+        'last_location_lon': nfc_record.last_location_lon,
+        'last_location_time': nfc_record.last_location_time.isoformat() if nfc_record.last_location_time else None,
+        'affection_level': nfc_record.affection_level,
+        'conversations': conversations
+    })
 
 
